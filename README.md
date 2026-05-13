@@ -2,10 +2,10 @@
 
 ---
 
-### **NAME:**  
-### **DEPARTMENT:**  
-### **ROLL NO:**  
-### **DATE OF EXPERIMENT:**  
+### **NAME:S.VENGADA KRISHNAN**  
+### **DEPARTMENT: CSE(IOT)**  
+### **ROLL NO:212223110061**  
+### **DATE OF EXPERIMENT:13.5.26**  
 
 ---
 
@@ -82,20 +82,163 @@ Experiment 4A
 ```
 
 
+from urllib import request
+import json
+import time
+import smbus2
+import ssl
+
+# =====================================================
+# SSL FIX
+# =====================================================
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# =====================================================
+# BH1750 SENSOR CONFIGURATION
+# =====================================================
+
+DEVICE = 0x23
+ONE_TIME_HIGH_RES_MODE = 0x20
+
+bus = smbus2.SMBus(1)
+
+# =====================================================
+# THINGZMATE CLOUD CONFIGURATION
+# =====================================================
+
+API_KEY = "26bcd07ff842eda8c96dafdb6266bb5c"
+
+URL = "https://iot.saveetha.in:4433/api/v1/device-types/exp4edge/devices/4ex/uplink"
+
+# =====================================================
+# BH1750 READ FUNCTION
+# =====================================================
+
+def read_light():
+
+    data = bus.read_i2c_block_data(
+        DEVICE,
+        ONE_TIME_HIGH_RES_MODE,
+        2
+    )
+
+    lux = (data[0] << 8 | data[1]) / 1.2
+
+    return round(lux, 2)
+
+# =====================================================
+# START MESSAGE
+# =====================================================
+
+print("======================================")
+print("BH1750 + ThingzMate Cloud Started")
+print("======================================")
+
+time.sleep(2)
+
+# =====================================================
+# MAIN LOOP
+# =====================================================
+
+while True:
+
+    try:
+
+        # ==========================================
+        # READ SENSOR
+        # ==========================================
+
+        lux = read_light()
+
+        print("Light Intensity (Lux):", lux)
+
+        # ==========================================
+        # CREATE JSON PAYLOAD
+        # ==========================================
+
+        payload = {
+            "lux": lux
+        }
+
+        data = json.dumps(payload).encode()
+
+        print("Payload:", payload)
+
+        # ==========================================
+        # HTTP REQUEST
+        # ==========================================
+
+        req = request.Request(
+            URL,
+            method="POST"
+        )
+
+        req.add_header(
+            "Content-Type",
+            "application/json"
+        )
+
+        req.add_header(
+            "Authorization",
+            "Bearer " + API_KEY
+        )
+
+        # ==========================================
+        # SEND DATA TO THINGZMATE
+        # ==========================================
+
+        response = request.urlopen(
+            req,
+            data=data,
+            timeout=10
+        )
+
+        # ==========================================
+        # RESPONSE
+        # ==========================================
+
+        print("======================================")
+        print("Cloud Upload Success")
+        print("Server Response:", response.read().decode())
+        print("======================================")
+
+        time.sleep(5)
+
+    except KeyboardInterrupt:
+
+        print("======================================")
+        print("Program Stopped")
+        print("======================================")
+
+        break
+
+    except Exception as e:
+
+        print("======================================")
+        print("Error:", e)
+        print("======================================")
+
+        time.sleep(2)
  
 
 
 
  
-````
+```
 
 ### OUPUT  
+# FIGURE -04 CIRCUIT DIAGRAM
+<img width="960" height="1280" alt="WhatsApp Image 2026-05-13 at 11 37 54 AM" src="https://github.com/user-attachments/assets/c2962df5-749b-40d8-a0bb-706a30e6dc8c" />
 
-# FIGURE -04 ADD TITILE HERE 
+# FIGURE -05 PROGRAM OUTPUT
+<img width="1730" height="973" alt="image" src="https://github.com/user-attachments/assets/561dcd69-438a-49dc-a333-0383544d4bf8" />
 
-#  FIGURE -05 ADD TITILE HERE 
+#  FIGURE -06 CONSOLE OUTPUT
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/83271687-eb65-4b88-949b-217aebe69177" />
 
-# FIGURE -06 ADD TITLE HERE 
+# FIGURE -07 VISUALIZATION OUTPUT
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/eba5829c-b5b4-4d38-a255-a7dbf31919cc" />
 
 Experiment 4B
 ## PROGRAM (Python)
